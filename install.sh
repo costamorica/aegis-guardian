@@ -52,7 +52,15 @@ if [[ ! -f "$CONFIG_DIR/guardian.conf" ]]; then
         "$CONFIG_DIR/guardian.conf"
 fi
 
-ln -sfn "$TARGET_DIR/guardian" /usr/local/bin/guardian
+rm -f /usr/local/bin/guardian
+
+cat > /usr/local/bin/guardian <<'EOF'
+#!/usr/bin/env bash
+
+exec /usr/local/lib/aegis-guardian/guardian "$@"
+EOF
+
+chmod 755 /usr/local/bin/guardian
 
 install -o root -g root -m 644 \
     "$SOURCE_DIR/systemd/aegis-guardian.service" \
