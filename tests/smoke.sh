@@ -5,10 +5,10 @@ set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 version_output="$("$ROOT/guardian" version)"
-[[ "$version_output" == "Aegis Guardian 0.3.0-dev" ]]
+[[ "$version_output" == "Aegis Guardian 1.0.0-rc1" ]]
 
 text_output="$("$ROOT/guardian" check system --format text || true)"
-grep -q 'Aegis Guardian 0.3.0-dev' <<<"$text_output"
+grep -q 'Aegis Guardian 1.0.0-rc1' <<<"$text_output"
 grep -q 'system.disk-root' <<<"$text_output"
 
 diagnose_output="$("$ROOT/guardian" diagnose system --format text || true)"
@@ -21,7 +21,7 @@ import json
 import sys
 
 data = json.load(sys.stdin)
-assert data["guardian_version"] == "0.3.0-dev"
+assert data["guardian_version"] == "1.0.0-rc1"
 assert data["mode"] == "diagnose"
 assert any(
     item["module"] == "system"

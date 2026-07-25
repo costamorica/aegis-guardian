@@ -1,13 +1,12 @@
-# Aegis Guardian development configuration
+# Aegis Guardian 1.0 configuration
 
 INSTANCE_NAME="default"
 
-# Read-only operation is the default.
+# Guardian 1.0 is read-only.
 AUTO_REPAIR=false
-
-# No repair action is enabled implicitly.
-ALLOWED_REPAIRS=()
 
 LOG_DIR="/var/log/aegis-guardian"
 STATE_DIR="/var/lib/aegis-guardian"
 REPORT_DIR="/var/lib/aegis-guardian/reports"
+
+DEFAULT_FORMAT="json"

@@ -1,0 +1,20 @@
+[Unit]
+Description=Aegis Guardian read-only health check
+Documentation=https://github.com/costamorica/aegis-guardian
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/lib/aegis-guardian/guardian check --format json --save
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=10m
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/aegis-guardian /var/log/aegis-guardian

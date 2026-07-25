@@ -63,3 +63,20 @@ No container data was lost, but the incident established a permanent design rule
 - all Docker operations are read-only;
 - no service, container, image, volume or package is modified;
 - automatic repair remains disabled.
+## [1.0.0-rc1] - 2026-07-25
+
+### Added
+
+- `guardian modules`;
+- `guardian info`;
+- `guardian doctor`;
+- persistent JSON reports with `--save`;
+- non-intrusive installation and removal scripts;
+- hardened systemd service and recurring timer;
+- system-wide configuration support.
+
+### Security
+
+- installer never invokes a package manager;
+- automatic repair is unavailable;
+- the systemd service uses a read-only filesystem sandbox except for Guardian state and logs.

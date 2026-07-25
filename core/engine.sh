@@ -89,7 +89,8 @@ guardian_command_run() {
     shift
 
     local requested_module=""
-    local format="text"
+    local format="${DEFAULT_FORMAT:-text}"
+    local save_report=false
     local argument
 
     while (($#)); do
@@ -102,6 +103,9 @@ guardian_command_run() {
                 ;;
             --format=*)
                 format="${argument#*=}"
+                ;;
+            --save)
+                save_report=true
                 ;;
             -*)
                 printf 'Unknown option: %s\n' "$argument" >&2
@@ -149,6 +153,10 @@ guardian_command_run() {
 
     guardian_render "$format"
 
+    if [[ "$save_report" == true ]]; then
+        guardian_save_report
+    fi
+
     local overall
     overall="$(guardian_overall_status)"
     return "$(guardian_exit_code_for_status "$overall")"
@@ -173,4 +181,83 @@ guardian_render() {
         text) guardian_report_text ;;
         json) guardian_report_json ;;
     esac
+}
+
+
+guardian_command_modules() {
+    guardian_results_reset "modules"
+    guardian_registry_discover
+
+    local index
+    for index in "${!GUARDIAN_MODULE_IDS[@]}"; do
+        printf '%s\n' "${GUARDIAN_MODULE_IDS[$index]}"
+    done
+}
+
+guardian_command_info() {
+    guardian_results_reset "info"
+    guardian_registry_discover
+
+    printf 'Aegis Guardian %s\n' "$(guardian_read_version)"
+    printf 'Root: %s\n' "$GUARDIAN_ROOT"
+    printf 'Config: %s\n' "$GUARDIAN_CONFIG_FILE"
+    printf 'Instance: %s\n' "$INSTANCE_NAME"
+    printf 'Host: %s\n' "$GUARDIAN_HOST"
+    printf 'Modules: %d\n' "${#GUARDIAN_MODULE_IDS[@]}"
+    printf 'Default format: %s\n' "$DEFAULT_FORMAT"
+    printf 'Automatic repair: disabled\n'
+}
+
+guardian_command_doctor() {
+    local failures=0
+    local command
+
+    printf 'Aegis Guardian doctor\n\n'
+
+    for command in bash python3 find sort hostname date; do
+        if command -v "$command" >/dev/null 2>&1; then
+            printf '[OK] %s\n' "$command"
+        else
+            printf '[MISSING] %s\n' "$command"
+            failures=$((failures + 1))
+        fi
+    done
+
+    if [[ -r "$GUARDIAN_CONFIG_FILE" ]]; then
+        printf '[OK] configuration: %s\n' "$GUARDIAN_CONFIG_FILE"
+    else
+        printf '[MISSING] configuration: %s\n' "$GUARDIAN_CONFIG_FILE"
+        failures=$((failures + 1))
+    fi
+
+    if [[ -r "$GUARDIAN_VERSION_FILE" ]]; then
+        printf '[OK] version file\n'
+    else
+        printf '[MISSING] version file\n'
+        failures=$((failures + 1))
+    fi
+
+    guardian_registry_discover
+    if ((${#GUARDIAN_MODULE_IDS[@]} > 0)); then
+        printf '[OK] modules: %d discovered\n' "${#GUARDIAN_MODULE_IDS[@]}"
+    else
+        printf '[MISSING] no modules discovered\n'
+        failures=$((failures + 1))
+    fi
+
+    return "$(( failures > 0 ? 2 : 0 ))"
+}
+
+guardian_save_report() {
+    mkdir -p "$REPORT_DIR"
+
+    local timestamp report_path latest_path
+    timestamp="$(date '+%Y%m%dT%H%M%S%z')"
+    report_path="${REPORT_DIR}/guardian-${timestamp}.json"
+    latest_path="${REPORT_DIR}/latest.json"
+
+    guardian_report_json > "$report_path"
+    cp -f "$report_path" "$latest_path"
+
+    printf 'Report saved: %s\n' "$report_path" >&2
 }
