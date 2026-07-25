@@ -35,7 +35,10 @@ guardian_main() {
             guardian_command_version
             ;;
         check)
-            guardian_command_check "$@"
+            guardian_command_run "check" "$@"
+            ;;
+        diagnose)
+            guardian_command_run "diagnose" "$@"
             ;;
         report)
             guardian_command_report "$@"
@@ -58,15 +61,17 @@ Aegis Guardian
 Usage:
   guardian version
   guardian check [module] [--format text|json]
+  guardian diagnose [module] [--format text|json]
   guardian report --format text|json
   guardian help
 
 Commands:
-  version   Print the Guardian version
-  check     Run all checks or one module
-  report    Render the latest in-memory result set
-  help      Show this help
+  version    Print the Guardian version
+  check      Run health checks
+  diagnose   Collect extended diagnostic evidence
+  report     Render the latest in-memory result set
+  help       Show this help
 
-Guardian 0.2.0-dev is read-only.
+Guardian 0.3.0-dev is read-only.
 EOF
 }

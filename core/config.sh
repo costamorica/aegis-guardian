@@ -15,7 +15,7 @@ guardian_load_config() {
     REPORT_DIR="${REPORT_DIR:-/var/lib/aegis-guardian/reports}"
 
     if [[ "$AUTO_REPAIR" != "false" ]]; then
-        printf 'Safety refusal: AUTO_REPAIR must remain false in 0.2.0-dev.\n' >&2
+        printf 'Safety refusal: AUTO_REPAIR must remain false in 0.3.0-dev.\n' >&2
         return 4
     fi
 }

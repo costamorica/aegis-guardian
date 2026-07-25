@@ -10,11 +10,13 @@ GUARDIAN_RUN_MODE=""
 GUARDIAN_HOST=""
 
 guardian_results_reset() {
+    local mode="$1"
+
     GUARDIAN_RESULTS=()
     GUARDIAN_RUN_ID="$(date '+%Y%m%dT%H%M%S%z')"
     GUARDIAN_RUN_STARTED_AT="$(date --iso-8601=seconds)"
     GUARDIAN_RUN_FINISHED_AT=""
-    GUARDIAN_RUN_MODE="check"
+    GUARDIAN_RUN_MODE="$mode"
     GUARDIAN_HOST="$(hostname -f 2>/dev/null || hostname)"
 }
 

@@ -34,6 +34,7 @@ guardian_report_text() {
                 'import json,sys; print(json.loads(sys.argv[1])["status"])' \
                 "$result"
         )"
+
         symbol="$(guardian_status_symbol "$status")"
 
         python3 - "$symbol" "$result" <<'PY'

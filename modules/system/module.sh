@@ -80,3 +80,60 @@ module_check() {
             "$memory_usage"
     fi
 }
+
+module_diagnose() {
+    local os_name
+    local kernel
+    local load
+    local cpu_count
+    local root_fs
+
+    os_name="$(
+        . /etc/os-release 2>/dev/null
+        printf '%s' "${PRETTY_NAME:-unknown}"
+    )"
+    kernel="$(uname -srvmo)"
+    load="$(cut -d' ' -f1-3 /proc/loadavg)"
+    cpu_count="$(getconf _NPROCESSORS_ONLN 2>/dev/null || printf 'unknown')"
+    root_fs="$(findmnt -n -o FSTYPE,OPTIONS / 2>/dev/null || printf 'unknown')"
+
+    guardian_result_add \
+        "system" \
+        "operating-system" \
+        "info" \
+        "Operating system information collected" \
+        "os" \
+        "$os_name"
+
+    guardian_result_add \
+        "system" \
+        "kernel-details" \
+        "info" \
+        "Detailed kernel information collected" \
+        "kernel" \
+        "$kernel"
+
+    guardian_result_add \
+        "system" \
+        "load-average" \
+        "info" \
+        "Load average collected" \
+        "load_1_5_15" \
+        "$load"
+
+    guardian_result_add \
+        "system" \
+        "cpu-count" \
+        "info" \
+        "Online CPU count collected" \
+        "cpus" \
+        "$cpu_count"
+
+    guardian_result_add \
+        "system" \
+        "root-filesystem" \
+        "info" \
+        "Root filesystem details collected" \
+        "filesystem" \
+        "$root_fs"
+}

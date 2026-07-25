@@ -75,3 +75,65 @@ module_check() {
             "0"
     fi
 }
+
+module_diagnose() {
+    if ! command -v systemctl >/dev/null 2>&1; then
+        guardian_result_add \
+            "systemd" \
+            "availability" \
+            "unknown" \
+            "systemctl is not available" \
+            "command" \
+            "systemctl"
+        return 0
+    fi
+
+    local version
+    local default_target
+    local failed_units
+
+    version="$(systemctl --version | head -n 1)"
+    default_target="$(systemctl get-default 2>/dev/null || printf 'unknown')"
+    failed_units="$(
+        systemctl list-units \
+            --state=failed \
+            --no-legend \
+            --plain 2>/dev/null |
+        awk '{print $1}' |
+        paste -sd ',' -
+    )"
+
+    guardian_result_add \
+        "systemd" \
+        "version" \
+        "info" \
+        "systemd version collected" \
+        "version" \
+        "$version"
+
+    guardian_result_add \
+        "systemd" \
+        "default-target" \
+        "info" \
+        "Default systemd target collected" \
+        "target" \
+        "$default_target"
+
+    if [[ -n "$failed_units" ]]; then
+        guardian_result_add \
+            "systemd" \
+            "failed-unit-list" \
+            "warning" \
+            "Failed systemd unit names collected" \
+            "units" \
+            "$failed_units"
+    else
+        guardian_result_add \
+            "systemd" \
+            "failed-unit-list" \
+            "ok" \
+            "No failed systemd units were found" \
+            "units" \
+            ""
+    fi
+}

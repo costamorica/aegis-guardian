@@ -27,8 +27,6 @@ guardian_parse_format() {
             --format=*)
                 format="${1#*=}"
                 ;;
-            *)
-                ;;
         esac
         shift || true
     done
@@ -46,24 +44,34 @@ guardian_parse_format() {
 
 guardian_execute_module() {
     local module_file="$1"
+    local mode="$2"
+    local function_name="module_${mode}"
 
-    unset -f module_check 2>/dev/null || true
+    unset -f module_check module_diagnose 2>/dev/null || true
 
     # shellcheck disable=SC1090
     source "$module_file"
 
-    if ! declare -F module_check >/dev/null; then
+    if ! declare -F "$function_name" >/dev/null; then
         guardian_result_add \
             "registry" \
             "module-api" \
-            "critical" \
-            "Module does not implement module_check" \
-            "module" \
-            "$module_file"
+            "unknown" \
+            "Module does not implement requested operation" \
+            "operation" \
+            "${mode}:$(basename "$(dirname "$module_file")")"
+        unset -f module_check module_diagnose 2>/dev/null || true
         return 0
     fi
 
-    if ! module_check; then
+    local status=0
+
+    set +e
+    "$function_name"
+    status=$?
+    set -e
+
+    if ((status != 0)); then
         guardian_result_add \
             "registry" \
             "module-runtime" \
@@ -73,16 +81,20 @@ guardian_execute_module() {
             "$module_file"
     fi
 
-    unset -f module_check 2>/dev/null || true
+    unset -f module_check module_diagnose 2>/dev/null || true
 }
 
-guardian_command_check() {
+guardian_command_run() {
+    local mode="$1"
+    shift
+
     local requested_module=""
     local format="text"
     local argument
 
     while (($#)); do
         argument="$1"
+
         case "$argument" in
             --format)
                 shift
@@ -103,6 +115,7 @@ guardian_command_check() {
                 requested_module="$argument"
                 ;;
         esac
+
         shift || true
     done
 
@@ -114,7 +127,7 @@ guardian_command_check() {
             ;;
     esac
 
-    guardian_results_reset
+    guardian_results_reset "$mode"
     guardian_registry_discover
 
     local module_file
@@ -124,10 +137,11 @@ guardian_command_check() {
             printf 'Unknown module: %s\n' "$requested_module" >&2
             return 3
         fi
-        guardian_execute_module "$module_file"
+
+        guardian_execute_module "$module_file" "$mode"
     else
         for module_file in "${GUARDIAN_MODULE_PATHS[@]}"; do
-            guardian_execute_module "$module_file"
+            guardian_execute_module "$module_file" "$mode"
         done
     fi
 
@@ -145,7 +159,7 @@ guardian_command_report() {
     format="$(guardian_parse_format "$@")"
 
     if ((${#GUARDIAN_RESULTS[@]} == 0)); then
-        printf 'No in-memory report is available. Run guardian check first.\n' >&2
+        printf 'No in-memory report is available. Run guardian check or diagnose first.\n' >&2
         return 3
     fi
 
