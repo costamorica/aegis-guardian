@@ -22,3 +22,22 @@ All notable changes to this project will be documented in this file.
 The initial prototype installer explicitly requested Debian's `docker.io` package on a host already using Docker CE. APT attempted to replace the existing Docker stack, causing a temporary service interruption and a Buildx package conflict.
 
 No container data was lost, but the incident established a permanent design rule: Guardian must inspect infrastructure dependencies, never select or replace their package provider.
+## [0.2.0-dev] - 2026-07-25
+
+### Added
+
+- read-only Guardian CLI;
+- `guardian version`;
+- `guardian check`;
+- module discovery and validation;
+- isolated module execution;
+- normalized in-memory results;
+- text and JSON reporters;
+- system and systemd modules;
+- syntax and smoke tests.
+
+### Security
+
+- automatic repair remains disabled;
+- no package installation is performed;
+- no service or container is modified.

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+umask 027
+
+GUARDIAN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=core/bootstrap.sh
+source "${GUARDIAN_ROOT}/core/bootstrap.sh"
+
+guardian_main "$@"
