@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+umask 027
+
+AG_ROOT="${AG_ROOT:-/opt/aegis-guardian}"
+
+# shellcheck source=/opt/aegis-guardian/lib/common.sh
+source "$AG_ROOT/lib/common.sh"
+
+# shellcheck source=/opt/aegis-guardian/lib/report.sh
+source "$AG_ROOT/lib/report.sh"
+
+LOCK_FILE="/run/lock/aegis-guardian.lock"
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
+
+: > "$RUN_FILE"
+
+log "===== Aegis Guardian ${RUN_ID} ====="
+
+module_count=0
+
+for module in "$AG_ROOT"/modules/*.sh; do
+    [[ -f "$module" ]] || continue
+
+    module_count=$((module_count + 1))
+
+    # shellcheck disable=SC1090
+    source "$module"
+
+    if declare -F module_check >/dev/null &&
+       declare -F module_name >/dev/null; then
+
+        log "Module : $(module_name)"
+        module_check
+    else
+        emit_result \
+            "$(basename "$module")" \
+            "critical" \
+            false \
+            "API module invalide" \
+            "module_name ou module_check absent"
+    fi
+
+    unset -f module_name module_check 2>/dev/null || true
+done
+
+if ((module_count == 0)); then
+    emit_result "guardian" "critical" false "Aucun module chargé" ""
+fi
+
+build_summary
+
+log "Rapport : ${SUMMARY_FILE}"
+log "===== Fin Aegis Guardian ====="

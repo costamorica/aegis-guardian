@@ -1,0 +1,6 @@
+*.log
+*.tmp
+*.swp
+.env
+reports/
+state/
