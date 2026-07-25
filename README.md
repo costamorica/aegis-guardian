@@ -1,78 +1,299 @@
 # Aegis Guardian
 
-Aegis Guardian is an open-source Linux support, monitoring and controlled recovery tool built around the **Aegis Method**.
+**Aegis Guardian** is an open-source Linux support, monitoring and diagnostic tool built around the **Aegis Method**.
 
-It is designed to assist system administrators without silently taking ownership of their infrastructure.
+It helps system administrators inspect hosts, understand failures and produce structured reports without silently taking ownership of the infrastructure.
 
-> Observe first. Understand before acting. Repair only what is explicitly allowed.
+> Observe first. Understand before acting. Change nothing without explicit authorization.
 
-## Project status
+## Version 1.0
 
-Current development version: **0.1.0-dev**
+Aegis Guardian 1.0 is a stable, read-only foundation focused on:
 
-Aegis Guardian is not production-ready yet. Its command-line interface, module API and configuration format may change before version 1.0.
+* system health checks;
+* extended diagnostics;
+* modular Linux inspection;
+* human-readable terminal output;
+* machine-readable JSON reports;
+* recurring systemd execution;
+* safe, non-intrusive installation.
 
-The CDDN infrastructure is the first real-world test environment, while the software itself remains distribution- and organization-agnostic.
+The first production validation was completed on the **CDDN Debian 13 infrastructure**. Development and cross-distribution testing were also performed on **Gentoo Linux**.
 
-## Core goals
+## Features
 
-- inspect Linux hosts without changing them;
-- explain why a component is considered healthy or unhealthy;
-- collect structured diagnostic information;
-- perform only explicitly authorized, low-risk recovery actions;
-- produce human-readable and machine-readable reports;
-- remain lightweight, auditable and easy to extend.
-
-## Non-goals
-
-Aegis Guardian must not:
-
-- install or replace Docker, Caddy, MariaDB, PHP or other infrastructure components;
-- change package providers;
-- rewrite application configuration without explicit approval;
-- hide failed recovery attempts;
-- treat automation as a substitute for system administration.
-
-## Planned CLI
+### Command-line interface
 
 ```bash
+guardian version
+guardian info
+guardian modules
+guardian doctor
 guardian check
-guardian check docker
-guardian diagnose discourse
-guardian repair docker.restart
-guardian report --format json
+guardian diagnose
 ```
+
+Checks and diagnostics may target a specific module:
+
+```bash
+guardian check system
+guardian check systemd
+guardian check docker
+
+guardian diagnose system
+guardian diagnose systemd
+guardian diagnose docker
+```
+
+Reports are available as text or JSON:
+
+```bash
+guardian check --format text
+guardian check --format json
+guardian check --format json --save
+```
+
+### Included modules
+
+| Module    | Checks                                   | Diagnostics                                                    |
+| --------- | ---------------------------------------- | -------------------------------------------------------------- |
+| `system`  | Kernel, uptime, disk usage, memory usage | OS, kernel details, load average, CPU count, root filesystem   |
+| `systemd` | System state and failed units            | Version, default target and failed unit list                   |
+| `docker`  | CLI, daemon and container state          | Versions, storage driver, cgroup driver, containers and images |
+
+Docker is optional. If it is not installed, Guardian reports the module as unavailable without modifying the host.
+
+### Persistent reports
+
+Saved reports are written to:
+
+```text
+/var/lib/aegis-guardian/reports/
+```
+
+The most recent report is always available at:
+
+```text
+/var/lib/aegis-guardian/reports/latest.json
+```
+
+### Scheduled checks
+
+The installer enables a systemd timer that runs Guardian every 15 minutes:
+
+```bash
+systemctl status aegis-guardian.timer
+systemctl list-timers aegis-guardian.timer
+```
+
+The service is a `Type=oneshot` unit. An `inactive (dead)` state after a successful run is normal.
 
 ## Safety model
 
-Guardian separates observation from modification:
+Aegis Guardian 1.0 is strictly read-only.
 
-| Mode | Changes the host | Purpose |
-|---|---:|---|
-| `check` | No | Health assessment |
-| `diagnose` | No | Extended evidence collection |
-| `repair` | Only allow-listed actions | Controlled recovery |
+It does not:
 
-Automatic repair is disabled by default.
+* install, remove or upgrade packages;
+* replace Docker or another package provider;
+* restart services or containers;
+* modify application configuration;
+* alter storage, networking or firewall rules;
+* perform automatic repairs.
+
+The installer only deploys Guardian itself, its configuration and its systemd units.
+
+Controlled recovery actions are planned for a later release and will require an explicit allow-list, risk classification and complete audit trail.
+
+## Requirements
+
+Required commands:
+
+* Bash;
+* Python 3;
+* systemd;
+* standard GNU/Linux utilities such as `find`, `sort`, `hostname` and `date`.
+
+Docker is optional and only required for the Docker module.
+
+Guardian does not install missing dependencies automatically.
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/costamorica/aegis-guardian.git
+cd aegis-guardian
+```
+
+Run the local validation suite:
+
+```bash
+./tests/syntax.sh
+./tests/smoke.sh
+./guardian doctor
+```
+
+Install Guardian:
+
+```bash
+sudo ./install.sh
+```
+
+Verify the system-wide installation:
+
+```bash
+guardian version
+guardian doctor
+guardian check --format text
+```
+
+## Configuration
+
+The system-wide configuration file is:
+
+```text
+/etc/aegis-guardian/guardian.conf
+```
+
+Example:
+
+```bash
+INSTANCE_NAME="my-server"
+AUTO_REPAIR=false
+
+LOG_DIR="/var/log/aegis-guardian"
+STATE_DIR="/var/lib/aegis-guardian"
+REPORT_DIR="/var/lib/aegis-guardian/reports"
+
+DEFAULT_FORMAT="json"
+```
+
+`AUTO_REPAIR` must remain `false` in version 1.0.
+
+## Uninstallation
+
+```bash
+sudo ./uninstall.sh
+```
+
+The uninstaller removes:
+
+* the Guardian runtime;
+* the command wrapper;
+* the systemd service and timer.
+
+Configuration and generated reports are preserved.
+
+## Architecture
+
+```text
+aegis-guardian/
+├── guardian
+├── VERSION
+├── core/
+│   ├── bootstrap.sh
+│   ├── config.sh
+│   ├── engine.sh
+│   ├── registry.sh
+│   └── results.sh
+├── modules/
+│   ├── docker/
+│   ├── system/
+│   └── systemd/
+├── reporters/
+│   ├── json.sh
+│   └── text.sh
+├── config/
+├── systemd/
+├── tests/
+└── docs/
+```
+
+Guardian discovers modules automatically. Each module provides metadata and implements one or more supported operations.
+
+## Module contract
+
+```bash
+guardian_module_id="example"
+guardian_module_version="1"
+guardian_module_description="Example Guardian module"
+
+module_check() {
+    guardian_result_add \
+        "example" \
+        "health" \
+        "ok" \
+        "Example check passed" \
+        "state" \
+        "healthy"
+}
+
+module_diagnose() {
+    guardian_result_add \
+        "example" \
+        "details" \
+        "info" \
+        "Diagnostic information collected" \
+        "value" \
+        "example"
+}
+```
+
+## Exit codes
+
+| Code | Meaning                                       |
+| ---: | --------------------------------------------- |
+|  `0` | Healthy, informational, or successful command |
+|  `1` | Warning or unknown state                      |
+|  `2` | Critical finding                              |
+|  `3` | Invalid command or configuration              |
+|  `4` | Safety or permission refusal                  |
+|  `5` | Internal Guardian failure                     |
 
 ## Development
 
 ```bash
 git clone https://github.com/costamorica/aegis-guardian.git
 cd aegis-guardian
+
 ./tests/syntax.sh
+./tests/smoke.sh
+./guardian check
+./guardian diagnose system
 ```
 
-Do not install development versions on a production host without reviewing the changes first.
+Before submitting changes:
+
+* keep modules independent;
+* preserve read-only behavior for the 1.0 branch;
+* run the complete test suite;
+* document new commands, modules and result fields;
+* never add implicit package-management operations.
 
 ## Documentation
 
-- [Manifesto](MANIFESTO.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Specification](docs/SPECIFICATION.md)
-- [Security model](docs/SECURITY-MODEL.md)
-- [Roadmap](ROADMAP.md)
+* [Manifesto](MANIFESTO.md)
+* [Architecture](docs/ARCHITECTURE.md)
+* [Specification](docs/SPECIFICATION.md)
+* [Security model](docs/SECURITY-MODEL.md)
+* [Version 1.0 release scope](docs/RELEASE-1.0.md)
+* [Roadmap](ROADMAP.md)
+* [Changelog](CHANGELOG.md)
+
+## Project philosophy
+
+Aegis Guardian is not intended to replace the system administrator.
+
+It handles repetitive observation, evidence collection and reporting so that human attention can remain focused on decisions that require context and judgment.
+
+The project follows a simple sequence:
+
+```text
+Observe → Understand → Report → Decide
+```
 
 ## License
 
-GPL-3.0-or-later.
+Aegis Guardian is released under the **GNU General Public License v3.0 or later**.
