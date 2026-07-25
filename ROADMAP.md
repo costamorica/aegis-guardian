@@ -1,39 +1,60 @@
 # Roadmap
 
-## 2.0.0-alpha
+## 0.1.0-dev: Foundation
 
-- moteur modulaire ;
-- configuration centrale ;
-- rapports JSON ;
-- supervision systemd ;
-- Docker, Discourse, TeamSpeak ;
-- installation propre.
+- English project documentation;
+- manifesto and safety model;
+- version file;
+- CLI contract;
+- result schema;
+- module API draft;
+- non-intrusive installer specification.
 
-## 2.0.0-beta
+## 0.2.0-dev: Read-only engine
 
-- rapports e-mail complets ;
-- anti-spam par type d’alerte ;
-- historique des exécutions ;
-- tests Bash automatisés ;
-- gestion fine des erreurs ;
-- sauvegardes WordPress, MariaDB et Discourse.
+- `guardian version`;
+- `guardian check`;
+- module discovery;
+- isolated module execution;
+- terminal and JSON reporters;
+- system and systemd modules.
 
-## 2.5
+## 0.3.0-dev: Diagnostics
 
-- tableau de bord HTML statique ;
-- vue mobile ;
-- historique sur 30 jours ;
-- statistiques simples.
+- `guardian diagnose`;
+- Docker diagnostics;
+- HTTP and TLS diagnostics;
+- evidence collection.
 
-## 3.0
+## 0.4.0-alpha: Controlled recovery
 
-- API locale ;
-- plugins externes ;
-- inventaire système ;
-- gestion multi-instance.
+- repair action registry;
+- local safety policy;
+- explicit `guardian repair`;
+- audit trail;
+- systemd restart action.
 
-## 4.0
+## 0.5.0-alpha: CDDN pilot modules
 
-- supervision multi-serveurs ;
-- déploiement centralisé ;
-- interface d’administration.
+- Docker;
+- Discourse;
+- TeamSpeak;
+- Caddy;
+- MariaDB;
+- PHP-FPM;
+- WordPress.
+
+## 0.8.0-beta
+
+- notification policy;
+- e-mail reporter;
+- static HTML dashboard;
+- migration tooling from CDDN Guardian v1.
+
+## 1.0.0
+
+- stable CLI;
+- stable module API;
+- documented upgrade policy;
+- production-ready installer;
+- tested CDDN migration.

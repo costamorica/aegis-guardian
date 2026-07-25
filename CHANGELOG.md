@@ -1,18 +1,24 @@
 # Changelog
 
-Toutes les modifications importantes du projet sont documentées ici.
+All notable changes to this project will be documented in this file.
 
-## [2.0.0-alpha1] - 2026-07-25
+## [Unreleased]
 
-### Ajouté
+### Changed
 
-- moteur modulaire Aegis Guardian ;
-- découverte automatique des modules Bash ;
-- configuration centralisée ;
-- rapports JSON normalisés ;
-- modules système, services, Discourse, TeamSpeak et site web ;
-- auto-réparation contrôlée des services et conteneurs ;
-- unités systemd ;
-- scripts d’installation, mise à jour et désinstallation ;
-- documentation initiale ;
-- workflow ShellCheck.
+- reset the development version to `0.1.0-dev`;
+- switched project documentation to English;
+- redefined Guardian as a Linux support and controlled recovery tool;
+- made read-only operation the default;
+- documented the repair allow-list and risk model.
+
+### Security
+
+- package installation and package-provider replacement are now forbidden by design;
+- automatic repair is disabled by default.
+
+### Incident note
+
+The initial prototype installer explicitly requested Debian's `docker.io` package on a host already using Docker CE. APT attempted to replace the existing Docker stack, causing a temporary service interruption and a Buildx package conflict.
+
+No container data was lost, but the incident established a permanent design rule: Guardian must inspect infrastructure dependencies, never select or replace their package provider.

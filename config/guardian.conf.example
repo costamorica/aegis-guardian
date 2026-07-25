@@ -1,25 +1,13 @@
-INSTANCE_NAME="CDDN"
-MAIL_TO="contact@cddn.fr"
+# Aegis Guardian development configuration
 
-SITE_URL="https://cddn.fr"
-SITE_DOMAIN="cddn.fr"
+INSTANCE_NAME="default"
 
-FORUM_URL="https://forum.cddn.fr"
-FORUM_DOMAIN="forum.cddn.fr"
+# Read-only operation is the default.
+AUTO_REPAIR=false
 
-DISCOURSE_CONTAINER="app"
-TEAMSPEAK_CONTAINER="teamspeak"
+# No repair action is enabled implicitly.
+ALLOWED_REPAIRS=()
 
 LOG_DIR="/var/log/aegis-guardian"
 STATE_DIR="/var/lib/aegis-guardian"
 REPORT_DIR="/var/lib/aegis-guardian/reports"
-
-DISK_WARNING_PERCENT=85
-DISK_CRITICAL_PERCENT=92
-MEMORY_WARNING_PERCENT=90
-
-HTTP_TIMEOUT=15
-HTTP_RETRIES=3
-HTTP_RETRY_DELAY=5
-
-AUTO_REPAIR=true

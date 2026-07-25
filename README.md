@@ -1,76 +1,78 @@
 # Aegis Guardian
 
-Aegis Guardian est un framework léger, modulaire et auditable de supervision et d’auto-réparation pour serveurs Linux.
+Aegis Guardian is an open-source Linux support, monitoring and controlled recovery tool built around the **Aegis Method**.
 
-Le projet est né dans l’écosystème **Aegis**, un laboratoire Gentoo orienté contrôle, qualité, compréhension du système, automatisation fiable et documentation reproductible.
+It is designed to assist system administrators without silently taking ownership of their infrastructure.
 
-La CDDN constitue le premier environnement de production.
+> Observe first. Understand before acting. Repair only what is explicitly allowed.
 
-## Philosophie
+## Project status
 
-La méthode Aegis repose sur six principes :
+Current development version: **0.1.0-dev**
 
-1. construire proprement ;
-2. comprendre avant d’automatiser ;
-3. automatiser uniquement ce qui est fiable ;
-4. surveiller l’état réel du système ;
-5. réparer automatiquement lorsque cela reste sûr ;
-6. alerter lorsqu’une décision humaine apporte une vraie valeur.
+Aegis Guardian is not production-ready yet. Its command-line interface, module API and configuration format may change before version 1.0.
 
-## État du projet
+The CDDN infrastructure is the first real-world test environment, while the software itself remains distribution- and organization-agnostic.
 
-Version actuelle : **2.0.0-alpha1**
+## Core goals
 
-Cette version doit fonctionner en parallèle de CDDN Guardian v1 pendant sa phase de validation.
+- inspect Linux hosts without changing them;
+- explain why a component is considered healthy or unhealthy;
+- collect structured diagnostic information;
+- perform only explicitly authorized, low-risk recovery actions;
+- produce human-readable and machine-readable reports;
+- remain lightweight, auditable and easy to extend.
 
-## Fonctionnalités actuelles
+## Non-goals
 
-- découverte automatique des modules ;
-- configuration centralisée ;
-- rapports JSON ;
-- supervision systemd ;
-- surveillance du disque et de la mémoire ;
-- contrôle Docker ;
-- contrôle et auto-réparation de Discourse ;
-- contrôle et auto-réparation de TeamSpeak ;
-- vérification locale du site et du forum via Caddy ;
-- timer systemd toutes les 15 minutes.
+Aegis Guardian must not:
 
-## Installation
+- install or replace Docker, Caddy, MariaDB, PHP or other infrastructure components;
+- change package providers;
+- rewrite application configuration without explicit approval;
+- hide failed recovery attempts;
+- treat automation as a substitute for system administration.
+
+## Planned CLI
+
+```bash
+guardian check
+guardian check docker
+guardian diagnose discourse
+guardian repair docker.restart
+guardian report --format json
+```
+
+## Safety model
+
+Guardian separates observation from modification:
+
+| Mode | Changes the host | Purpose |
+|---|---:|---|
+| `check` | No | Health assessment |
+| `diagnose` | No | Extended evidence collection |
+| `repair` | Only allow-listed actions | Controlled recovery |
+
+Automatic repair is disabled by default.
+
+## Development
 
 ```bash
 git clone https://github.com/costamorica/aegis-guardian.git
 cd aegis-guardian
-sudo ./install.sh
+./tests/syntax.sh
 ```
 
-Premier contrôle :
+Do not install development versions on a production host without reviewing the changes first.
 
-```bash
-sudo systemctl start aegis-guardian.service
-sudo systemctl status aegis-guardian.service --no-pager -l
-sudo cat /var/lib/aegis-guardian/reports/latest.json
-```
+## Documentation
 
-## Mise à jour
+- [Manifesto](MANIFESTO.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Specification](docs/SPECIFICATION.md)
+- [Security model](docs/SECURITY-MODEL.md)
+- [Roadmap](ROADMAP.md)
 
-```bash
-cd /opt/aegis-guardian-src
-git pull
-sudo ./update.sh
-```
-
-## Migration depuis CDDN Guardian v1
-
-Pendant les essais, conserver la v1 active.
-
-Après plusieurs contrôles propres :
-
-```bash
-sudo systemctl disable --now cddn-healthcheck.timer
-sudo systemctl enable --now aegis-guardian.timer
-```
-
-## Licence
+## License
 
 GPL-3.0-or-later.
